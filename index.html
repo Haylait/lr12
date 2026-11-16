@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторна робота №12 - Language learning (advanced)</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .main-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 720px;
+        }
+        .difficulty-panel {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-width: 190px;
+        }
+        .difficulty-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 14px;
+            color: #222;
+        }
+        .difficulty-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .difficulty-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+        .difficulty-option input[type="radio"] {
+            accent-color: #007bff;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .app-container {
+            text-align: center;
+            width: 100%;
+            max-width: 440px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+        .card {
+            width: 100%;
+            height: 220px;
+            background: #fff;
+            border: 2px solid #f0f0f0;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 18px;
+            user-select: none;
+            padding: 15px;
+            word-break: break-word;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card:active {
+            transform: translateY(0);
+        }
+        .step-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #222;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .nav-btn:hover:not(:disabled) {
+            background-color: #eef4ff;
+            color: #007bff;
+        }
+        .nav-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px 14px;
+            font-size: 16px;
+            border: 2px solid #4a90e2;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 16px;
+            outline: none;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        input[type="text"]:disabled {
+            background-color: #f8f9fa;
+            color: #555;
+            cursor: not-allowed;
+        }
+        input.error {
+            border-color: #dc3545;
+            background-color: #fff3f3;
+        }
+        input.correct-input {
+            border-color: #28a745;
+            background-color: #f0fff4;
+        }
+        input.incorrect-input {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        .stats-container {
+            margin-top: 5px;
+        }
+        .stats-title {
+            width: 100%;
+            text-align: center;
+            color: #0056ff;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .correct-stat {
+            color: #1db954;
+            line-height: 1.4;
+        }
+        .incorrect-stat {
+            color: #ff1e1e;
+            line-height: 1.4;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            z-index: 1000;
+        }
+        .modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal h2 {
+            margin-top: 0;
+        }
+        .btn-restart {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-restart:hover {
+            background: #0056b3;
+        }
+        @media (max-width: 680px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+            .difficulty-panel {
+                width: 100%;
+                max-width: 440px;
+                padding: 15px 20px;
+            }
+            .difficulty-options {
+                flex-direction: row;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            .card {
+                height: 170px;
+                font-size: 26px;
+            }
+            input[type="text"] {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <aside class="difficulty-panel">
+        <div class="difficulty-title">Рівень складності</div>
+        <div class="difficulty-options">
+            <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="beginner" checked>
+                <span>Початковий</span>
+            </label>
+            <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="intermediate">
+                <span>Середній</span>
+            </label>
+            <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="advanced">
+                <span>Високий</span>
+            </label>
+        </div>
+    </aside>
+
+    <div class="app-container">
+        <div class="card" id="word-card" title="Натисніть для перевірки">
+            always
+        </div>
+
+        <div class="step-info">
+            <button type="button" class="nav-btn" id="prev-btn" title="Попереднє слово">&larr;</button>
+            <span id="step-counter">1/10</span>
+            <button type="button" class="nav-btn" id="next-btn" title="Наступне слово">&rarr;</button>
+        </div>
+
+        <input type="text" id="translation-input" placeholder="введіть переклад" autocomplete="off">
+
+        <div class="stats-container">
+            <div class="stats-title">Статистика</div>
+            <div class="stats">
+                <div class="correct-stat">Вірно<br><span id="correct-count">0</span></div>
+                <div class="incorrect-stat">Невірно<br><span id="incorrect-count">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="result-modal">
+    <div class="modal">
+        <h2>Рівень знань мови</h2>
+        <p id="selected-difficulty-info"></p>
+        <p id="final-score"></p>
+        <p id="proficiency-level" style="font-weight: bold; font-size: 20px;"></p>
+        <button class="btn-restart" id="restart-btn">Почати заново</button>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const dictionaries = {
+        beginner: [
+            { word: "always", translation: "завжди" },
+            { word: "never", translation: "ніколи" },
+            { word: "often", translation: "часто" },
+            { word: "sometimes", translation: "іноді" },
+            { word: "usually", translation: "зазвичай" },
+            { word: "apple", translation: "яблуко" },
+            { word: "book", translation: "книга" },
+            { word: "window", translation: "вікно" },
+            { word: "time", translation: "час" },
+            { word: "friend", translation: "друг" }
+        ],
+        intermediate: [
+            { word: "achieve", translation: "досягати" },
+            { word: "behavior", translation: "поведінка" },
+            { word: "confident", translation: "впевнений" },
+            { word: "decision", translation: "рішення" },
+            { word: "environment", translation: "довкілля" },
+            { word: "experience", translation: "досвід" },
+            { word: "improve", translation: "покращувати" },
+            { word: "knowledge", translation: "знання" },
+            { word: "opportunity", translation: "можливість" },
+            { word: "reliable", translation: "надійний" }
+        ],
+        advanced: [
+            { word: "ambiguous", translation: "двозначний" },
+            { word: "benevolent", translation: "доброзичливий" },
+            { word: "consequence", translation: "наслідок" },
+            { word: "deteriorate", translation: "погіршуватися" },
+            { word: "eloquent", translation: "красномовний" },
+            { word: "fluctuate", translation: "коливатися" },
+            { word: "inevitable", translation: "неминучий" },
+            { word: "perseverance", translation: "наполегливість" },
+            { word: "scrutinize", translation: "ретельно вивчати" },
+            { word: "ubiquitous", translation: "всюдисущий" }
+        ]
+    };
+
+    const difficultyLabels = {
+        beginner: "Початковий",
+        intermediate: "Середній",
+        advanced: "Високий"
+    };
+
+    let words = [];
+    let currentIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+    let currentDifficulty = "beginner";
+
+    function initGame() {
+        currentDifficulty = $('input[name="difficulty"]:checked').val() || "beginner";
+        const selectedList = dictionaries[currentDifficulty];
+
+        words = selectedList
+            .map(item => ({
+                word: item.word,
+                translation: item.translation,
+                userAnswer: "",
+                status: "unanswered"
+            }))
+            .sort(() => Math.random() - 0.5);
+
+        currentIndex = 0;
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+
+        updateStats();
+        loadWord();
+    }
+
+    function loadWord() {
+        const currentItem = words[currentIndex];
+        const inputField = $('#translation-input');
+
+        $('#word-card').text(currentItem.word);
+        $('#step-counter').text(`${currentIndex + 1}/${words.length}`);
+
+        $('#prev-btn').prop('disabled', currentIndex === 0);
+        $('#next-btn').prop('disabled', currentIndex === words.length - 1 && currentItem.status === "unanswered");
+
+        inputField.removeClass('error correct-input incorrect-input');
+
+        if (currentItem.status === "unanswered") {
+            inputField
+                .val('')
+                .prop('disabled', false)
+                .attr('placeholder', 'введіть переклад')
+                .focus();
+        } else {
+            inputField
+                .val(currentItem.userAnswer)
+                .prop('disabled', true)
+                .addClass(currentItem.status === "correct" ? 'correct-input' : 'incorrect-input');
+        }
+    }
+
+    function updateStats() {
+        $('#correct-count').text(correctAnswers);
+        $('#incorrect-count').text(incorrectAnswers);
+    }
+
+    function validateAndCheck() {
+        const currentItem = words[currentIndex];
+        const inputField = $('#translation-input');
+
+        if (currentItem.status !== "unanswered") {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                loadWord();
+            }
+            return;
+        }
+
+        const rawValue = inputField.val().trim();
+        const userAnswer = rawValue.toLowerCase();
+
+        if (userAnswer === "") {
+            inputField.addClass('error');
+            inputField.attr('placeholder', 'Введіть переклад!');
+            inputField.focus();
+            return;
+        }
+
+        const correctAnswer = currentItem.translation.toLowerCase();
+        currentItem.userAnswer = rawValue;
+
+        if (userAnswer === correctAnswer) {
+            currentItem.status = "correct";
+            correctAnswers++;
+        } else {
+            currentItem.status = "incorrect";
+            incorrectAnswers++;
+        }
+
+        updateStats();
+
+        const answeredCount = words.filter(w => w.status !== "unanswered").length;
+        if (answeredCount === words.length) {
+            loadWord();
+            setTimeout(showResults, 300);
+            return;
+        }
+
+        if (currentIndex < words.length - 1) {
+            currentIndex++;
+        } else {
+            const firstUnanswered = words.findIndex(w => w.status === "unanswered");
+            if (firstUnanswered !== -1) {
+                currentIndex = firstUnanswered;
+            }
+        }
+
+        loadWord();
+    }
+
+    $('#word-card').on('click', function() {
+        validateAndCheck();
+    });
+
+    $('#prev-btn').on('click', function() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            loadWord();
+        }
+    });
+
+    $('#next-btn').on('click', function() {
+        if (currentIndex < words.length - 1) {
+            currentIndex++;
+            loadWord();
+        }
+    });
+
+    $('input[name="difficulty"]').on('change', function() {
+        initGame();
+    });
+
+    $('#translation-input').on('input', function() {
+        $(this).removeClass('error');
+        $(this).attr('placeholder', 'введіть переклад');
+    });
+
+    $('#translation-input').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            validateAndCheck();
+        }
+    });
+
+    function showResults() {
+        const total = words.length;
+        const ratio = correctAnswers / total;
+
+        $('#selected-difficulty-info').text(`Обраний рівень: ${difficultyLabels[currentDifficulty]}`);
+        $('#final-score').text(`Вірно: ${correctAnswers} з ${total}, Невірно: ${incorrectAnswers}`);
+
+        let level = "";
+        let color = "";
+
+        if (ratio === 1) {
+            level = "Відмінно (C1/C2)";
+            color = "#28a745";
+        } else if (ratio >= 0.7) {
+            level = "Добре (B1/B2)";
+            color = "#17a2b8";
+        } else if (ratio >= 0.4) {
+            level = "Задовільно (A2)";
+            color = "#ffc107";
+        } else {
+            level = "Потрібно більше практики (A1)";
+            color = "#dc3545";
+        }
+
+        $('#proficiency-level').text(level).css('color', color);
+        $('#result-modal').css('display', 'flex');
+    }
+
+    $('#restart-btn').on('click', function() {
+        $('#result-modal').css('display', 'none');
+        initGame();
+    });
+
+    initGame();
+});
+</script>
+</body>
+</html>
